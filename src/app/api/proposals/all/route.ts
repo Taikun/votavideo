@@ -1,0 +1,31 @@
+import { NextResponse } from 'next/server';
+import { PrismaClient } from '@prisma/client';
+import { getServerSession } from 'next-auth/next';
+import { authOptions } from '@/lib/auth';
+
+const prisma = new PrismaClient();
+
+export async function GET() {
+  const session = await getServerSession(authOptions);
+
+  if (session?.user?.role !== 'admin') {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  try {
+    const proposals = await prisma.videoProposal.findMany({
+      include: {
+        _count: {
+          select: { votes: true },
+        },
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+    return NextResponse.json(proposals);
+  } catch (error) {
+    console.error("Error fetching all proposals:", error);
+    return NextResponse.json({ error: 'Error fetching proposals' }, { status: 500 });
+  }
+}
