@@ -87,6 +87,29 @@ export default function ManageProposalsList() {
     }
   };
 
+  const handleDeleteProposal = async (proposalId: string) => {
+    const confirmed = window.confirm('Are you sure you want to delete this proposal?');
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      const res = await fetch(`/api/proposals/${proposalId}`, {
+        method: 'DELETE',
+      });
+
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({ error: 'Failed to delete proposal' }));
+        throw new Error(body.error || 'Failed to delete proposal');
+      }
+
+      fetchProposals();
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Ocurrió un error al eliminar la propuesta.';
+      alert(`Error: ${message}`);
+    }
+  };
+
   if (loading) return <p>Loading proposals...</p>;
   if (error) return <p className="text-red-500">{error}</p>;
 
@@ -100,14 +123,22 @@ export default function ManageProposalsList() {
               Votes: {p._count.votes} | Status: <span className={p.status === 'PUBLISHED' ? 'text-green-500' : 'text-yellow-500'}>{p.status}</span>
             </p>
           </div>
-          {p.status === 'VOTING' && (
+          <div className="flex gap-2">
+            {p.status === 'VOTING' && (
+              <button
+                onClick={() => handleMarkAsPublished(p.id)}
+                className="bg-green-500 text-white font-semibold py-1 px-3 rounded hover:bg-green-600 transition-colors"
+              >
+                Mark as Published
+              </button>
+            )}
             <button
-              onClick={() => handleMarkAsPublished(p.id)}
-              className="bg-green-500 text-white font-semibold py-1 px-3 rounded hover:bg-green-600 transition-colors"
+              onClick={() => handleDeleteProposal(p.id)}
+              className="bg-red-500 text-white font-semibold py-1 px-3 rounded hover:bg-red-600 transition-colors"
             >
-              Mark as Published
+              Delete
             </button>
-          )}
+          </div>
         </div>
       ))}
     </div>

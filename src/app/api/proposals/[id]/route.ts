@@ -43,4 +43,37 @@ export async function PUT(
   }
 }
 
+export async function DELETE(
+  _request: Request,
+  context: ParamsContext
+) {
+  const { id: proposalId } = await context.params;
+  const session = await getServerSession(authOptions);
+
+  if (session?.user?.role !== 'admin') {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  try {
+    await prisma.videoProposal.delete({
+      where: { id: proposalId },
+    });
+
+    return NextResponse.json({ success: true });
+  } catch (error: unknown) {
+    console.error(`Error deleting proposal ${proposalId}:`, error);
+
+    if (
+      typeof error === 'object' &&
+      error !== null &&
+      'code' in error &&
+      (error as { code?: string }).code === 'P2025'
+    ) {
+      return NextResponse.json({ error: 'Proposal not found' }, { status: 404 });
+    }
+
+    return NextResponse.json({ error: 'Error deleting proposal' }, { status: 500 });
+  }
+}
+
 export const runtime = 'nodejs';
