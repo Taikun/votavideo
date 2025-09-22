@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
-import { getAuthOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
+import { authOptions } from '@/lib/auth';
 
 
 type ParamsContext = { params: Promise<{ id: string }> };
@@ -11,7 +11,7 @@ export async function PUT(
   context: ParamsContext
 ) {
   const { id: proposalId } = await context.params;
-  const session = await getServerSession(getAuthOptions());
+  const session = await getServerSession(authOptions);
 
   if (session?.user?.role !== 'admin') {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });

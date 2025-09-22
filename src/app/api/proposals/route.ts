@@ -1,11 +1,11 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
-import { getAuthOptions } from '@/lib/auth';
+import { authOptions } from '@/lib/auth';
 import { prisma } from '@/lib/prisma';
 
 export async function GET() {
   try {
-    const session = await getServerSession(getAuthOptions());
+    const session = await getServerSession(authOptions);
     const userId = session?.user?.id ?? null;
 
     const [proposals, userVotes] = await Promise.all([
@@ -45,7 +45,7 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  const session = await getServerSession(getAuthOptions());
+  const session = await getServerSession(authOptions);
 
   if (session?.user?.role !== 'admin') {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
