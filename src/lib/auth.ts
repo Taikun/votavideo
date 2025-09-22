@@ -33,6 +33,13 @@ function getAdapter(): Adapter {
 
 export function getAuthOptions(): NextAuthOptions {
   if (!cachedOptions) {
+    console.log('[auth] Initializing NextAuth options', {
+      hasDatabaseUrl: Boolean(process.env.DATABASE_URL),
+      hasGoogleClientId: Boolean(process.env.GOOGLE_CLIENT_ID),
+      hasGoogleClientSecret: Boolean(process.env.GOOGLE_CLIENT_SECRET),
+      hasNextAuthSecret: Boolean(process.env.NEXTAUTH_SECRET),
+      vercelEnv: process.env.VERCEL_ENV,
+    });
     const adapter = getAdapter();
     cachedOptions = {
       adapter,
