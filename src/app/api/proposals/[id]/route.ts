@@ -5,17 +5,18 @@ import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
+type ParamsContext = { params: Promise<{ id: string }> };
+
 export async function PUT(
   request: Request,
-  { params }: { params: { id: string } }
+  context: ParamsContext
 ) {
+  const { id: proposalId } = await context.params;
   const session = await getServerSession(authOptions);
 
   if (session?.user?.role !== 'admin') {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
-
-  const proposalId = params.id;
 
   try {
     const { status, publishedUrl } = await request.json();
