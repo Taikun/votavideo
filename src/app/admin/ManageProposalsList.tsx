@@ -12,6 +12,26 @@ type Proposal = {
   };
 };
 
+const isProposalArray = (data: unknown): data is Proposal[] => {
+  return (
+    Array.isArray(data) &&
+    data.every((item) => {
+      if (!item || typeof item !== 'object') {
+        return false;
+      }
+
+      const proposal = item as Partial<Proposal> & { _count?: { votes?: unknown } };
+      return (
+        typeof proposal.id === 'string' &&
+        typeof proposal.title === 'string' &&
+        (proposal.status === 'VOTING' || proposal.status === 'PUBLISHED') &&
+        ('publishedUrl' in proposal ? proposal.publishedUrl === null || typeof proposal.publishedUrl === 'string' : true) &&
+        typeof proposal._count?.votes === 'number'
+      );
+    })
+  );
+};
+
 export default function ManageProposalsList() {
   const [proposals, setProposals] = useState<Proposal[]>([]);
   const [loading, setLoading] = useState(true);
@@ -22,10 +42,14 @@ export default function ManageProposalsList() {
     try {
       const res = await fetch('/api/proposals/all');
       if (!res.ok) throw new Error('Failed to fetch proposals');
-      const data = await res.json();
+      const data: unknown = await res.json();
+      if (!isProposalArray(data)) {
+        throw new Error('Formato de respuesta inesperado.');
+      }
       setProposals(data);
-    } catch (err: any) {
-      setError(err.message);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Ocurrió un error al cargar las propuestas.';
+      setError(message);
     } finally {
       setLoading(false);
     }
@@ -57,8 +81,9 @@ export default function ManageProposalsList() {
 
       // Refresh the list to show the change
       fetchProposals();
-    } catch (err: any) {
-      alert(`Error: ${err.message}`);
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Ocurrió un error inesperado.';
+      alert(`Error: ${message}`);
     }
   };
 

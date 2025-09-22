@@ -33,8 +33,9 @@ export default function CreateProposalForm() {
       setTitle('');
       setDescription('');
       setThumbnailUrl('');
-    } catch (error: any) {
-      setMessage(`Error: ${error.message}`);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Ocurrió un error inesperado.';
+      setMessage(`Error: ${message}`);
     } finally {
       setIsSubmitting(false);
     }

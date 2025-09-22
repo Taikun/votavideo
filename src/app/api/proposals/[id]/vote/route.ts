@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
-import { PrismaClient } from '@prisma/client';
+import { Prisma, PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
@@ -26,9 +26,8 @@ export async function POST(
       },
     });
     return NextResponse.json(newVote, { status: 201 });
-  } catch (error: any) {
-    // P2002 is the Prisma error code for a unique constraint violation
-    if (error.code === 'P2002') {
+  } catch (error: unknown) {
+    if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
       return NextResponse.json({ error: 'You have already voted for this proposal.' }, { status: 409 });
     }
     console.error("Error creating vote:", error);
