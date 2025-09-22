@@ -12,6 +12,7 @@ export type VideoProposal = {
   _count: {
     votes: number;
   };
+  hasVoted: boolean;
 };
 
 export default function VideoProposalList() {
@@ -19,7 +20,6 @@ export default function VideoProposalList() {
   const [proposals, setProposals] = useState<VideoProposal[]>([]);
   const [loading, setLoading] = useState(true);
   const [voting, setVoting] = useState<string | null>(null);
-  const [votedProposalIds, setVotedProposalIds] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     fetch('/api/proposals')
@@ -35,7 +35,10 @@ export default function VideoProposalList() {
       .then(data => {
         // Ensure the data is an array before setting it
         if (Array.isArray(data)) {
-          setProposals(data);
+          setProposals(data.map((proposal: VideoProposal) => ({
+            ...proposal,
+            hasVoted: Boolean(proposal.hasVoted),
+          })));
         } else {
           // If data is not an array, log an error and don't update the state
           console.error("API did not return an array for proposals:", data);
@@ -49,7 +52,7 @@ export default function VideoProposalList() {
       });
   }, []);
 
-  const handleVote = async (proposalId: string) => {
+  const handleVoteToggle = async (proposalId: string, hasVoted: boolean) => {
     if (!session) {
       alert("Debes iniciar sesión para votar.");
       return;
@@ -58,22 +61,28 @@ export default function VideoProposalList() {
     setVoting(proposalId);
 
     try {
+      const method = hasVoted ? 'DELETE' : 'POST';
       const res = await fetch(`/api/proposals/${proposalId}/vote`, {
-        method: 'POST',
+        method,
       });
 
       if (!res.ok) {
         const body = await res.json();
-        throw new Error(body.error || 'Failed to vote');
+        throw new Error(body.error || (hasVoted ? 'Failed to remove vote' : 'Failed to vote'));
       }
 
-      // Update UI to reflect the new vote
+      // Update UI to reflect the new vote status
       setProposals(prevProposals =>
         prevProposals.map(p =>
-          p.id === proposalId ? { ...p, _count: { votes: p._count.votes + 1 } } : p
+          p.id === proposalId
+            ? {
+                ...p,
+                _count: { votes: Math.max(0, p._count.votes + (hasVoted ? -1 : 1)) },
+                hasVoted: !hasVoted,
+              }
+            : p
         )
       );
-      setVotedProposalIds(prev => new Set(prev).add(proposalId));
 
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : "Ocurrió un error al votar.";
@@ -94,7 +103,7 @@ export default function VideoProposalList() {
   return (
     <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
       {proposals.map(proposal => {
-        const hasVoted = votedProposalIds.has(proposal.id);
+        const hasVoted = proposal.hasVoted;
         const isVoting = voting === proposal.id;
 
         return (
@@ -112,11 +121,11 @@ export default function VideoProposalList() {
               <div className="mt-4 flex justify-between items-center">
                 <span className="font-bold text-lg">{proposal._count.votes} Votos</span>
                 <button
-                  onClick={() => handleVote(proposal.id)}
-                  disabled={!session || isVoting || hasVoted}
+                  onClick={() => handleVoteToggle(proposal.id, hasVoted)}
+                  disabled={!session || isVoting}
                   className="bg-blue-500 text-white font-bold py-2 px-4 rounded disabled:bg-gray-400 hover:bg-blue-700 transition-colors"
                 >
-                  {hasVoted ? '¡Votado!' : isVoting ? 'Votando...' : 'Votar'}
+                  {isVoting ? 'Procesando...' : hasVoted ? 'Quitar voto' : 'Votar'}
                 </button>
               </div>
             </div>

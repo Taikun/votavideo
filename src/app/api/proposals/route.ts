@@ -7,20 +7,39 @@ const prisma = new PrismaClient();
 
 export async function GET() {
   try {
-    const proposals = await prisma.videoProposal.findMany({
-      where: {
-        status: 'VOTING',
-      },
-      include: {
-        _count: {
-          select: { votes: true },
+    const session = await getServerSession(authOptions);
+    const userId = session?.user?.id ?? null;
+
+    const [proposals, userVotes] = await Promise.all([
+      prisma.videoProposal.findMany({
+        where: {
+          status: 'VOTING',
         },
-      },
-      orderBy: {
-        createdAt: 'desc',
-      },
-    });
-    return NextResponse.json(proposals);
+        include: {
+          _count: {
+            select: { votes: true },
+          },
+        },
+        orderBy: {
+          createdAt: 'desc',
+        },
+      }),
+      userId
+        ? prisma.vote.findMany({
+            where: { userId },
+            select: { videoProposalId: true },
+          })
+        : Promise.resolve<{ videoProposalId: string }[]>([]),
+    ]);
+
+    const votedProposalIds = new Set(userVotes.map(vote => vote.videoProposalId));
+
+    const proposalsWithVoteStatus = proposals.map(proposal => ({
+      ...proposal,
+      hasVoted: votedProposalIds.has(proposal.id),
+    }));
+
+    return NextResponse.json(proposalsWithVoteStatus);
   } catch (error) {
     console.error("Error fetching proposals:", error);
     return NextResponse.json({ error: 'Error fetching proposals' }, { status: 500 });
