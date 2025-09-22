@@ -1,10 +1,27 @@
 import { PrismaAdapter } from "@auth/prisma-adapter";
+import type { Adapter } from "next-auth/adapters";
 import { NextAuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import { prisma } from "./prisma";
 
+if (!process.env.DATABASE_URL) {
+  throw new Error("DATABASE_URL environment variable is not set. Configure it in your deployment before running NextAuth.");
+}
+
+let adapter: Adapter;
+
+try {
+  adapter = PrismaAdapter(prisma);
+} catch (error) {
+  console.error("Failed to initialize PrismaAdapter", {
+    error,
+    databaseUrlDefined: Boolean(process.env.DATABASE_URL),
+  });
+  throw error;
+}
+
 export const authOptions: NextAuthOptions = {
-  adapter: PrismaAdapter(prisma),
+  adapter,
   providers: [
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID!,
