@@ -1,7 +1,8 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
+import { useEffect, useState } from 'react';
 
 type PublishedVideo = {
   id: string;
@@ -51,7 +52,13 @@ export default function PublishedPage() {
                 rel="noopener noreferrer"
                 className="border rounded-lg overflow-hidden shadow-lg bg-white dark:bg-gray-800 block hover:shadow-2xl transition-shadow"
               >
-                <img src={video.thumbnailUrl} alt={video.title} className="w-full h-48 object-cover" />
+                <Image
+                  src={video.thumbnailUrl}
+                  alt={video.title}
+                  width={400}
+                  height={300}
+                  className="w-full h-48 object-cover"
+                />
                 <div className="p-4">
                   <h3 className="text-xl font-bold">{video.title}</h3>
                   <p className="mt-2 text-gray-600 dark:text-gray-300">{video.description}</p>

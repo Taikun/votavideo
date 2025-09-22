@@ -1,36 +1,45 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# VotaVideo
 
-## Getting Started
+Aplicación creada con [Next.js](https://nextjs.org) para gestionar propuestas de vídeos, votar por ellas y publicar los vídeos finalizados.
 
-First, run the development server:
+## Requisitos previos
+
+- Node.js 18 o superior
+- npm (o pnpm/yarn/bun)
+
+## Puesta en marcha
+
+Instala las dependencias y arranca el servidor de desarrollo:
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+La aplicación estará disponible en [http://localhost:3000](http://localhost:3000).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Infraestructura durante el desarrollo
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- **Base de datos:** [Neon](https://neon.tech/) aloja la instancia de PostgreSQL utilizada en desarrollo.
+- **Almacenamiento de imágenes:** las miniaturas se suben a [Imgur](https://imgur.com/), y las URLs resultantes se usan en la aplicación.
 
-## Learn More
+## Despliegue
 
-To learn more about Next.js, take a look at the following resources:
+El proyecto se despliega en [Vercel](https://vercel.com/). Durante las primeras pruebas de build se registraron los siguientes errores relacionados con ESLint y el uso del componente `<img />`:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```
+23:14:49.445 ./src/app/VideoProposalList.tsx
+77:21  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+100:13 Warning: Using `<img>` could result in slower LCP ...  @next/next/no-img-element
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+23:14:49.446 ./src/app/admin/CreateProposalForm.tsx
+36:21  Error: Unexpected any. Specify a different type.  @typescript-eslint/no-explicit-any
+```
 
-## Deploy on Vercel
+Quedan anotados como referencia por si vuelven a aparecer en futuros despliegues.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Recursos adicionales
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- [Documentación de Next.js](https://nextjs.org/docs)
+- [Documentación de Prisma](https://www.prisma.io/docs)
+- [Documentación de NextAuth.js](https://next-auth.js.org/getting-started/introduction)

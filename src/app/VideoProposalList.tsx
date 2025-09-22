@@ -1,5 +1,6 @@
 'use client';
 
+import Image from "next/image";
 import { useSession } from "next-auth/react";
 import { useEffect, useState } from "react";
 
@@ -74,8 +75,9 @@ export default function VideoProposalList() {
       );
       setVotedProposalIds(prev => new Set(prev).add(proposalId));
 
-    } catch (error: any) {
-      alert(error.message || "Ocurrió un error al votar.");
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : "Ocurrió un error al votar.";
+      alert(message);
     } finally {
       setVoting(null);
     }
@@ -97,7 +99,13 @@ export default function VideoProposalList() {
 
         return (
           <div key={proposal.id} className="border rounded-lg overflow-hidden shadow-lg bg-white dark:bg-gray-800">
-            <img src={proposal.thumbnailUrl} alt={proposal.title} className="w-full h-48 object-cover" />
+            <Image
+              src={proposal.thumbnailUrl}
+              alt={proposal.title}
+              width={400}
+              height={300}
+              className="w-full h-48 object-cover"
+            />
             <div className="p-4">
               <h3 className="text-xl font-bold">{proposal.title}</h3>
               <p className="mt-2 text-gray-600 dark:text-gray-300">{proposal.description}</p>
