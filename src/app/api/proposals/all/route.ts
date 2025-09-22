@@ -1,9 +1,7 @@
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
 import { getServerSession } from 'next-auth/next';
 import { authOptions } from '@/lib/auth';
-
-const prisma = new PrismaClient();
+import { prisma } from '@/lib/prisma';
 
 export async function GET() {
   const session = await getServerSession(authOptions);
@@ -29,3 +27,5 @@ export async function GET() {
     return NextResponse.json({ error: 'Error fetching proposals' }, { status: 500 });
   }
 }
+
+export const runtime = 'nodejs';

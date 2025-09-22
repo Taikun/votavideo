@@ -42,3 +42,5 @@ export async function PUT(
     return NextResponse.json({ error: 'Error updating proposal' }, { status: 500 });
   }
 }
+
+export const runtime = 'nodejs';
