@@ -90,12 +90,12 @@ export default function PublishedPage() {
               href={channelUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="text-xs text-blue-500 hover:underline"
+              className="text-sm font-medium text-blue-500 hover:underline"
             >
               {channelName}
             </Link>
           ) : channelName ? (
-            <p className="text-xs text-muted-foreground">{channelName}</p>
+            <p className="text-sm font-medium text-muted-foreground">{channelName}</p>
           ) : null}
         </div>
         <Link href="/" className="text-sm font-medium hover:underline">← Volver a Votaciones</Link>
