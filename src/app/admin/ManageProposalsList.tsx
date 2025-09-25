@@ -60,17 +60,22 @@ export default function ManageProposalsList() {
   }, []);
 
   const handleMarkAsPublished = async (proposalId: string) => {
-    const publishedUrl = window.prompt("Enter the final video URL (e.g., YouTube link):");
-    if (!publishedUrl) {
-      return; // User cancelled
+    const publishedUrl = window.prompt("Introduce la URL final del vídeo (opcional, por ejemplo enlace de YouTube):");
+    if (publishedUrl === null) {
+      return; // User cancelled the action entirely
     }
+
+    const sanitizedUrl = publishedUrl.trim();
 
     try {
       const res = await fetch(`/api/proposals/${proposalId}`,
         {
           method: 'PUT',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ status: 'PUBLISHED', publishedUrl }),
+          body: JSON.stringify({
+            status: 'PUBLISHED',
+            publishedUrl: sanitizedUrl.length > 0 ? sanitizedUrl : null,
+          }),
         }
       );
 

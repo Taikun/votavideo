@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth/next';
 import { prisma } from '@/lib/prisma';
+import { VideoStatus } from '@prisma/client';
 import { authOptions } from '@/lib/auth';
 
 
@@ -18,22 +19,45 @@ export async function PUT(
   }
 
   try {
-    const { status, publishedUrl } = await request.json();
+    const body = await request.json();
+    const { status } = body as { status?: unknown };
 
-    if (!status) {
+    if (typeof status !== 'string') {
       return NextResponse.json({ error: 'Missing status field' }, { status: 400 });
     }
-    
-    if (status === 'PUBLISHED' && !publishedUrl) {
-        return NextResponse.json({ error: 'publishedUrl is required when marking as published' }, { status: 400 });
+
+    let publishedUrl: string | null | undefined;
+
+    if ('publishedUrl' in body) {
+      const rawPublishedUrl = (body as { publishedUrl?: unknown }).publishedUrl;
+
+      if (rawPublishedUrl === null || rawPublishedUrl === undefined) {
+        publishedUrl = null;
+      } else if (typeof rawPublishedUrl === 'string') {
+        const trimmed = rawPublishedUrl.trim();
+        publishedUrl = trimmed.length > 0 ? trimmed : null;
+      } else {
+        return NextResponse.json({ error: 'Invalid publishedUrl value' }, { status: 400 });
+      }
+    } else if (status === 'PUBLISHED') {
+      // If published URL not provided explicitly, default to null when marking as published
+      publishedUrl = null;
+    }
+
+    const updateData: {
+      status: VideoStatus;
+      publishedUrl?: string | null;
+    } = {
+      status: status as VideoStatus,
+    };
+
+    if (publishedUrl !== undefined) {
+      updateData.publishedUrl = publishedUrl;
     }
 
     const updatedProposal = await prisma.videoProposal.update({
       where: { id: proposalId },
-      data: {
-        status,
-        publishedUrl,
-      },
+      data: updateData,
     });
 
     return NextResponse.json(updatedProposal);
