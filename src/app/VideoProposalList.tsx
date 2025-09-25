@@ -15,42 +15,78 @@ export type VideoProposal = {
   hasVoted: boolean;
 };
 
+const PAGE_SIZE = 6;
+
 export default function VideoProposalList() {
   const { data: session } = useSession();
   const [proposals, setProposals] = useState<VideoProposal[]>([]);
   const [loading, setLoading] = useState(true);
   const [voting, setVoting] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+
+  const sessionUserId = session?.user?.id ?? null;
 
   useEffect(() => {
-    fetch('/api/proposals')
-      .then(res => {
+    let isMounted = true;
+
+    const fetchProposals = async () => {
+      setLoading(true);
+      setError(null);
+
+      try {
+        const res = await fetch(`/api/proposals?page=${page}&pageSize=${PAGE_SIZE}`);
+
         if (!res.ok) {
-          // If the response is not OK, parse the error body and throw it
-          return res.json().then(errorBody => {
-            throw new Error(errorBody.error || 'Failed to fetch proposals');
-          });
+          const body = await res.json().catch(() => ({}));
+          throw new Error(body.error || 'Error al cargar las propuestas.');
         }
-        return res.json();
-      })
-      .then(data => {
-        // Ensure the data is an array before setting it
-        if (Array.isArray(data)) {
-          setProposals(data.map((proposal: VideoProposal) => ({
-            ...proposal,
-            hasVoted: Boolean(proposal.hasVoted),
-          })));
-        } else {
-          // If data is not an array, log an error and don't update the state
-          console.error("API did not return an array for proposals:", data);
+
+        const data = await res.json();
+
+        if (isMounted) {
+          const sanitizedTotalPages = typeof data.totalPages === 'number' ? Math.max(1, data.totalPages) : 1;
+
+          if (page > sanitizedTotalPages) {
+            setTotalPages(sanitizedTotalPages);
+            setPage(sanitizedTotalPages);
+            return;
+          }
+
+          if (Array.isArray(data.proposals)) {
+            setProposals(
+              data.proposals.map((proposal: VideoProposal) => ({
+                ...proposal,
+                hasVoted: Boolean(proposal.hasVoted),
+              }))
+            );
+          } else {
+            setProposals([]);
+          }
+
+          setTotalPages(sanitizedTotalPages);
         }
-      })
-      .catch(error => {
-        console.error("Error fetching proposals:", error.message);
-      })
-      .finally(() => {
-        setLoading(false);
-      });
-  }, []);
+      } catch (err) {
+        if (isMounted) {
+          const message = err instanceof Error ? err.message : 'Error al cargar las propuestas.';
+          setError(message);
+          setProposals([]);
+          setTotalPages(1);
+        }
+      } finally {
+        if (isMounted) {
+          setLoading(false);
+        }
+      }
+    };
+
+    fetchProposals();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [page, sessionUserId]);
 
   const handleVoteToggle = async (proposalId: string, hasVoted: boolean) => {
     if (!session) {
@@ -96,42 +132,70 @@ export default function VideoProposalList() {
     return <p className="text-center">Cargando propuestas...</p>;
   }
 
+  if (error) {
+    return <p className="text-center text-red-500">{error}</p>;
+  }
+
   if (proposals.length === 0) {
     return <p className="text-center">No hay propuestas para votar en este momento.</p>;
   }
 
   return (
-    <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-      {proposals.map(proposal => {
-        const hasVoted = proposal.hasVoted;
-        const isVoting = voting === proposal.id;
+    <>
+      <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+        {proposals.map(proposal => {
+          const hasVoted = proposal.hasVoted;
+          const isVoting = voting === proposal.id;
 
-        return (
-          <div key={proposal.id} className="border rounded-lg overflow-hidden shadow-lg bg-white dark:bg-gray-800">
-            <Image
-              src={proposal.thumbnailUrl}
-              alt={proposal.title}
-              width={400}
-              height={300}
-              className="w-full h-48 object-cover"
-            />
-            <div className="p-4">
-              <h3 className="text-xl font-bold">{proposal.title}</h3>
-              <p className="mt-2 text-gray-600 dark:text-gray-300">{proposal.description}</p>
-              <div className="mt-4 flex justify-between items-center">
-                <span className="font-bold text-lg">{proposal._count.votes} Votos</span>
-                <button
-                  onClick={() => handleVoteToggle(proposal.id, hasVoted)}
-                  disabled={!session || isVoting}
-                  className="bg-blue-500 text-white font-bold py-2 px-4 rounded disabled:bg-gray-400 hover:bg-blue-700 transition-colors"
-                >
-                  {isVoting ? 'Procesando...' : hasVoted ? 'Quitar voto' : 'Votar'}
-                </button>
+          return (
+            <div key={proposal.id} className="border rounded-lg overflow-hidden shadow-lg bg-white dark:bg-gray-800">
+              <Image
+                src={proposal.thumbnailUrl}
+                alt={proposal.title}
+                width={400}
+                height={300}
+                className="w-full h-48 object-cover"
+              />
+              <div className="p-4">
+                <h3 className="text-xl font-bold">{proposal.title}</h3>
+                <p className="mt-2 text-gray-600 dark:text-gray-300">{proposal.description}</p>
+                <div className="mt-4 flex justify-between items-center">
+                  <span className="font-bold text-lg">{proposal._count.votes} Votos</span>
+                  <button
+                    onClick={() => handleVoteToggle(proposal.id, hasVoted)}
+                    disabled={!session || isVoting}
+                    className="bg-blue-500 text-white font-bold py-2 px-4 rounded disabled:bg-gray-400 hover:bg-blue-700 transition-colors"
+                  >
+                    {isVoting ? 'Procesando...' : hasVoted ? 'Quitar voto' : 'Votar'}
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
-        );
-      })}
-    </div>
+          );
+        })}
+      </div>
+
+      {totalPages > 1 && (
+        <div className="mt-8 flex items-center justify-center gap-4">
+          <button
+            onClick={() => setPage(prev => Math.max(1, prev - 1))}
+            disabled={page === 1}
+            className="rounded border border-gray-300 px-4 py-2 text-sm font-medium hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            Anterior
+          </button>
+          <span className="text-sm font-medium text-gray-600 dark:text-gray-300">
+            Página {page} de {totalPages}
+          </span>
+          <button
+            onClick={() => setPage(prev => Math.min(totalPages, prev + 1))}
+            disabled={page === totalPages}
+            className="rounded border border-gray-300 px-4 py-2 text-sm font-medium hover:bg-gray-100 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            Siguiente
+          </button>
+        </div>
+      )}
+    </>
   );
 }
