@@ -3,6 +3,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
+import { channelName } from '@/lib/channel';
 
 type PublishedVideo = {
   id: string;
@@ -82,7 +83,12 @@ export default function PublishedPage() {
   return (
     <main className="flex min-h-screen flex-col items-center p-8 sm:p-20">
       <header className="w-full max-w-5xl flex justify-between items-center font-mono text-sm">
-        <h1 className="text-2xl font-bold"><Link href="/">VotaVideo</Link></h1>
+        <div>
+          <h1 className="text-2xl font-bold"><Link href="/">VotaVideo</Link></h1>
+          {channelName && (
+            <p className="text-xs text-muted-foreground">{channelName}</p>
+          )}
+        </div>
         <Link href="/" className="text-sm font-medium hover:underline">← Volver a Votaciones</Link>
       </header>
 

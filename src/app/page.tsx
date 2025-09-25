@@ -1,12 +1,18 @@
 import AuthButton from "./AuthButton";
 import VideoProposalList from "./VideoProposalList";
 import Link from "next/link";
+import { channelName } from "@/lib/channel";
 
 export default function Home() {
   return (
     <main className="flex min-h-screen flex-col items-center p-8 sm:p-20">
       <header className="w-full max-w-5xl flex justify-between items-center font-mono text-sm">
-        <h1 className="text-2xl font-bold">VotaVideo</h1>
+        <div>
+          <h1 className="text-2xl font-bold">VotaVideo</h1>
+          {channelName && (
+            <p className="text-xs text-muted-foreground">{channelName}</p>
+          )}
+        </div>
         <nav className="flex gap-4 items-center">
           <Link href="/published" className="text-sm font-medium hover:underline">Vídeos Publicados</Link>
           <AuthButton />
