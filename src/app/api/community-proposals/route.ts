@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { VideoStatus } from "@prisma/client";
 
 const DEFAULT_PAGE_SIZE = 6;
 const COMMUNITY_PLACEHOLDER = "/community-placeholder.svg";
@@ -103,7 +104,7 @@ export async function POST(request: Request) {
         description: rawDescription,
         thumbnailUrl: COMMUNITY_PLACEHOLDER,
         isCommunity: true,
-        status: "PENDING",
+        status: VideoStatus.PENDING,
         createdById: session.user.id,
       },
       include: {

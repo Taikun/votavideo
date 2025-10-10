@@ -5,6 +5,7 @@ import { useCallback, useEffect, useState } from "react";
 type CommunityProposal = {
   id: string;
   title: string;
+  description: string;
   createdAt: string;
   status: "PENDING" | "VOTING" | "PUBLISHED";
   createdBy: {
@@ -29,6 +30,7 @@ const isCommunityProposalArray = (data: unknown): data is CommunityProposal[] =>
       return (
         typeof proposal.id === "string" &&
         typeof proposal.title === "string" &&
+        typeof proposal.description === "string" &&
         typeof proposal.createdAt === "string" &&
         hasValidStatus &&
         (proposal.createdBy === null ||
@@ -116,6 +118,48 @@ export default function CommunityModerationList() {
     }
   };
 
+  const handleEdit = async (proposal: CommunityProposal) => {
+    const newTitle = window.prompt("Nuevo título", proposal.title);
+    if (newTitle === null) {
+      return;
+    }
+
+    const trimmedTitle = newTitle.trim();
+    if (trimmedTitle.length === 0) {
+      alert("El título no puede quedar vacío.");
+      return;
+    }
+
+    const newDescription = window.prompt("Nueva descripción", proposal.description);
+    if (newDescription === null) {
+      return;
+    }
+
+    const trimmedDescription = newDescription.trim();
+    if (trimmedDescription.length === 0) {
+      alert("La descripción no puede quedar vacía.");
+      return;
+    }
+
+    try {
+      const res = await fetch(`/api/proposals/${proposal.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title: trimmedTitle, description: trimmedDescription }),
+      });
+
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({ error: "No se pudo actualizar la propuesta" }));
+        throw new Error(body.error || "No se pudo actualizar la propuesta");
+      }
+
+      fetchProposals();
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "Ocurrió un error al actualizar la propuesta.";
+      alert(`Error: ${message}`);
+    }
+  };
+
   if (loading) {
     return <p>Cargando propuestas de la comunidad...</p>;
   }
@@ -135,18 +179,25 @@ export default function CommunityModerationList() {
           key={proposal.id}
           className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800"
         >
-          <div className="flex items-start justify-between gap-4">
+          <div className="flex flex-col gap-2 lg:flex-row lg:items-start lg:justify-between lg:gap-4">
             <div>
               <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{proposal.title}</h3>
+              <p className="text-sm text-gray-600 dark:text-gray-300">{proposal.description}</p>
               <p className="text-sm text-gray-500 dark:text-gray-400">
-                {proposal.createdBy?.name ?? "Usuario anónimo"}
-                {proposal.createdBy?.email ? ` · ${proposal.createdBy.email}` : ""}
+                Creada por {proposal.createdBy?.name ?? proposal.createdBy?.email ?? "Usuario anónimo"}
+                {proposal.createdBy?.email && proposal.createdBy?.name ? ` · ${proposal.createdBy.email}` : ""}
               </p>
               <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">
                 Enviada el {new Date(proposal.createdAt).toLocaleString()}
               </p>
             </div>
             <div className="flex gap-2">
+              <button
+                onClick={() => handleEdit(proposal)}
+                className="rounded-md bg-slate-100 px-3 py-1.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-200 dark:bg-slate-700 dark:text-slate-100 dark:hover:bg-slate-600"
+              >
+                Editar
+              </button>
               <button
                 onClick={() => handleApprove(proposal.id)}
                 className="rounded-md bg-blue-600 px-3 py-1.5 text-sm font-semibold text-white transition-colors hover:bg-blue-700"
@@ -166,4 +217,3 @@ export default function CommunityModerationList() {
     </div>
   );
 }
-

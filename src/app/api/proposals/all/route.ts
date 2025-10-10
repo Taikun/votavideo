@@ -16,6 +16,12 @@ export async function GET() {
         _count: {
           select: { votes: true },
         },
+        createdBy: {
+          select: {
+            name: true,
+            email: true,
+          },
+        },
       },
       orderBy: {
         createdAt: 'desc',

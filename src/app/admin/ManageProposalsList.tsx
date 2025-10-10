@@ -8,6 +8,11 @@ type Proposal = {
   status: 'PENDING' | 'VOTING' | 'PUBLISHED';
   publishedUrl: string | null;
   isCommunity: boolean;
+  description: string;
+  createdBy: {
+    name: string | null;
+    email: string | null;
+  } | null;
   _count: {
     votes: number;
   };
@@ -25,6 +30,7 @@ const isProposalArray = (data: unknown): data is Proposal[] => {
       return (
         typeof proposal.id === 'string' &&
         typeof proposal.title === 'string' &&
+        typeof proposal.description === 'string' &&
         (
           proposal.status === 'PENDING' ||
           proposal.status === 'VOTING' ||
@@ -32,7 +38,12 @@ const isProposalArray = (data: unknown): data is Proposal[] => {
         ) &&
         ('publishedUrl' in proposal ? proposal.publishedUrl === null || typeof proposal.publishedUrl === 'string' : true) &&
         typeof proposal._count?.votes === 'number' &&
-        typeof proposal.isCommunity === 'boolean'
+        typeof proposal.isCommunity === 'boolean' &&
+        (proposal.createdBy === null ||
+          (proposal.createdBy &&
+            typeof proposal.createdBy === 'object' &&
+            (proposal.createdBy.name === null || typeof proposal.createdBy.name === 'string') &&
+            (proposal.createdBy.email === null || typeof proposal.createdBy.email === 'string')))
       );
     })
   );
@@ -123,31 +134,89 @@ export default function ManageProposalsList() {
     }
   };
 
+  const handleEditProposal = async (proposal: Proposal) => {
+    const newTitle = window.prompt('Nuevo título para la propuesta:', proposal.title);
+    if (newTitle === null) {
+      return;
+    }
+
+    const trimmedTitle = newTitle.trim();
+    if (trimmedTitle.length === 0) {
+      alert('El título no puede quedar vacío.');
+      return;
+    }
+
+    const newDescription = window.prompt('Nueva descripción para la propuesta:', proposal.description ?? '');
+    if (newDescription === null) {
+      return;
+    }
+
+    const trimmedDescription = newDescription.trim();
+    if (trimmedDescription.length === 0) {
+      alert('La descripción no puede quedar vacía.');
+      return;
+    }
+
+    try {
+      const res = await fetch(`/api/proposals/${proposal.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: trimmedTitle,
+          description: trimmedDescription,
+        }),
+      });
+
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({ error: 'No se pudo actualizar la propuesta.' }));
+        throw new Error(body.error || 'No se pudo actualizar la propuesta.');
+      }
+
+      fetchProposals();
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : 'Ocurrió un error al actualizar la propuesta.';
+      alert(`Error: ${message}`);
+    }
+  };
+
   if (loading) return <p>Loading proposals...</p>;
   if (error) return <p className="text-red-500">{error}</p>;
 
   return (
     <div className="space-y-4">
       {proposals.map((p) => (
-        <div key={p.id} className="flex justify-between items-center p-4 border rounded-lg bg-white dark:bg-gray-800">
-          <div>
-            <h3 className="font-bold">{p.title}</h3>
-            <p className="text-sm text-gray-500 dark:text-gray-400">
-              Votes: {p._count.votes} | Status: <span className={p.status === 'PUBLISHED' ? 'text-green-500' : 'text-yellow-500'}>{p.status}</span>
+        <div key={p.id} className="flex flex-col gap-3 rounded-lg border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+          <div className="flex flex-col gap-1">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{p.title}</h3>
+            <p className="text-sm text-gray-600 dark:text-gray-300">{p.description}</p>
+            <p className="text-xs font-medium uppercase tracking-wide text-gray-400 dark:text-gray-500">
+              Estado: <span className={p.status === 'PUBLISHED' ? 'text-green-500' : p.status === 'PENDING' ? 'text-yellow-500' : 'text-blue-500'}>{p.status}</span>
+              {' · '}Votos: {p._count.votes}
             </p>
+            {p.isCommunity && (
+              <p className="text-xs text-gray-500 dark:text-gray-400">
+                Creada por {p.createdBy?.name || p.createdBy?.email || 'Usuario anónimo'}
+              </p>
+            )}
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={() => handleEditProposal(p)}
+              className="rounded bg-slate-100 px-3 py-1.5 text-sm font-semibold text-slate-700 transition-colors hover:bg-slate-200 dark:bg-slate-700 dark:text-slate-100 dark:hover:bg-slate-600"
+            >
+              Editar
+            </button>
             {p.status === 'VOTING' && (
               <button
                 onClick={() => handleMarkAsPublished(p.id)}
-                className="bg-green-500 text-white font-semibold py-1 px-3 rounded hover:bg-green-600 transition-colors"
+                className="rounded bg-green-500 px-3 py-1.5 text-sm font-semibold text-white transition-colors hover:bg-green-600"
               >
                 Mark as Published
               </button>
             )}
             <button
               onClick={() => handleDeleteProposal(p.id)}
-              className="bg-red-500 text-white font-semibold py-1 px-3 rounded hover:bg-red-600 transition-colors"
+              className="rounded bg-red-500 px-3 py-1.5 text-sm font-semibold text-white transition-colors hover:bg-red-600"
             >
               Delete
             </button>

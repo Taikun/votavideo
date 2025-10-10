@@ -14,12 +14,6 @@ export type CommunityProposal = {
   thumbnailUrl: string;
   hasVoted: boolean;
   createdAt: string;
-  createdBy?: {
-    id: string;
-    name: string | null;
-    email: string | null;
-    image: string | null;
-  } | null;
   _count: {
     votes: number;
   };
@@ -189,13 +183,6 @@ export default function CommunityProposalsClient() {
     [description, isAuthenticated, title]
   );
 
-  const contributorLabel = useCallback((proposal: CommunityProposal) => {
-    if (!proposal.createdBy) {
-      return "Miembro de la comunidad";
-    }
-    return proposal.createdBy.name || proposal.createdBy.email || "Miembro de la comunidad";
-  }, []);
-
   const canGoPrevious = useMemo(() => page > 1 && !loading, [page, loading]);
   const canGoNext = useMemo(() => page < totalPages && !loading, [page, totalPages, loading]);
 
@@ -288,9 +275,6 @@ export default function CommunityProposalsClient() {
                     <div className="flex flex-1 flex-col p-4">
                       <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{proposal.title}</h3>
                       <p className="mt-2 flex-1 text-sm text-gray-600 dark:text-gray-300">{proposal.description}</p>
-                      <p className="mt-4 text-xs font-medium uppercase tracking-wide text-gray-500 dark:text-gray-400">
-                        Propuesta por {contributorLabel(proposal)}
-                      </p>
                       <div className="mt-4 flex items-center justify-between">
                         <span className="text-base font-semibold text-gray-900 dark:text-gray-100">
                           {proposal._count.votes} votos

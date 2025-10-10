@@ -20,44 +20,73 @@ export async function PUT(
 
   try {
     const body = await request.json();
-    const { status } = body as { status?: unknown };
 
-    if (typeof status !== 'string') {
-      return NextResponse.json({ error: 'Missing status field' }, { status: 400 });
+    const rawStatus = (body as { status?: unknown }).status;
+    const rawTitle = (body as { title?: unknown }).title;
+    const rawDescription = (body as { description?: unknown }).description;
+    const rawPublishedUrl = (body as { publishedUrl?: unknown }).publishedUrl;
+
+    const updateData: {
+      status?: VideoStatus;
+      publishedUrl?: string | null;
+      title?: string;
+      description?: string;
+    } = {};
+
+    if (rawStatus !== undefined) {
+      if (typeof rawStatus !== 'string' || !Object.values(VideoStatus).includes(rawStatus as VideoStatus)) {
+        return NextResponse.json({ error: 'Invalid status value' }, { status: 400 });
+      }
+      updateData.status = rawStatus as VideoStatus;
+
+      if (rawPublishedUrl === undefined && updateData.status === VideoStatus.PUBLISHED) {
+        updateData.publishedUrl = null;
+      }
     }
 
-    let publishedUrl: string | null | undefined;
-
-    if ('publishedUrl' in body) {
-      const rawPublishedUrl = (body as { publishedUrl?: unknown }).publishedUrl;
-
-      if (rawPublishedUrl === null || rawPublishedUrl === undefined) {
-        publishedUrl = null;
+    if (rawPublishedUrl !== undefined) {
+      if (rawPublishedUrl === null) {
+        updateData.publishedUrl = null;
       } else if (typeof rawPublishedUrl === 'string') {
         const trimmed = rawPublishedUrl.trim();
-        publishedUrl = trimmed.length > 0 ? trimmed : null;
+        updateData.publishedUrl = trimmed.length > 0 ? trimmed : null;
       } else {
         return NextResponse.json({ error: 'Invalid publishedUrl value' }, { status: 400 });
       }
-    } else if (status === 'PUBLISHED') {
-      // If published URL not provided explicitly, default to null when marking as published
-      publishedUrl = null;
     }
 
-    const updateData: {
-      status: VideoStatus;
-      publishedUrl?: string | null;
-    } = {
-      status: status as VideoStatus,
-    };
+    if (rawTitle !== undefined) {
+      if (typeof rawTitle !== 'string' || rawTitle.trim().length === 0) {
+        return NextResponse.json({ error: 'El título no puede quedar vacío.' }, { status: 400 });
+      }
+      updateData.title = rawTitle.trim();
+    }
 
-    if (publishedUrl !== undefined) {
-      updateData.publishedUrl = publishedUrl;
+    if (rawDescription !== undefined) {
+      if (typeof rawDescription !== 'string' || rawDescription.trim().length === 0) {
+        return NextResponse.json({ error: 'La descripción no puede quedar vacía.' }, { status: 400 });
+      }
+      updateData.description = rawDescription.trim();
+    }
+
+    if (Object.keys(updateData).length === 0) {
+      return NextResponse.json({ error: 'No se proporcionaron cambios.' }, { status: 400 });
     }
 
     const updatedProposal = await prisma.videoProposal.update({
       where: { id: proposalId },
       data: updateData,
+      include: {
+        _count: {
+          select: { votes: true },
+        },
+        createdBy: {
+          select: {
+            name: true,
+            email: true,
+          },
+        },
+      },
     });
 
     return NextResponse.json(updatedProposal);
