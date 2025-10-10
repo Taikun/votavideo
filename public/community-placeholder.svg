@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2563eb" />
+      <stop offset="100%" stop-color="#9333ea" />
+    </linearGradient>
+  </defs>
+  <rect width="800" height="450" fill="url(#gradient)" />
+  <text x="50%" y="50%" dominant-baseline="middle" text-anchor="middle" font-size="64" font-family="'Inter', sans-serif" fill="#ffffff" opacity="0.8">
+    Comunidad
+  </text>
+</svg>

@@ -23,6 +23,7 @@ export default function Home() {
           ) : null}
         </div>
         <nav className="flex gap-4 items-center">
+          <Link href="/community-proposals" className="text-sm font-medium hover:underline">Propuestas de la comunidad</Link>
           <Link href="/published" className="text-sm font-medium hover:underline">Vídeos Publicados</Link>
           <AuthButton />
         </nav>

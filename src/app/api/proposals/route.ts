@@ -26,6 +26,7 @@ export async function GET(request: Request) {
       prisma.videoProposal.findMany({
         where: {
           status: 'VOTING',
+          isCommunity: false,
         },
         include: {
           _count: {
@@ -47,6 +48,7 @@ export async function GET(request: Request) {
       prisma.videoProposal.count({
         where: {
           status: 'VOTING',
+          isCommunity: false,
         },
       }),
     ]);

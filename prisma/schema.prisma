@@ -47,6 +47,7 @@ model User {
   accounts      Account[]
   sessions      Session[]
   votes         Vote[]
+  communityProposals VideoProposal[] @relation("UserCommunityProposals")
 }
 
 model VerificationToken {
@@ -71,6 +72,10 @@ model VideoProposal {
   status        VideoStatus @default(VOTING)
   createdAt     DateTime    @default(now())
   updatedAt     DateTime    @updatedAt
+  isCommunity   Boolean     @default(false)
+  createdById   String?
+
+  createdBy     User?       @relation("UserCommunityProposals", fields: [createdById], references: [id])
 
   votes         Vote[]
 }
