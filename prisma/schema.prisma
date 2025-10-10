@@ -59,6 +59,7 @@ model VerificationToken {
 }
 
 enum VideoStatus {
+  PENDING
   VOTING
   PUBLISHED
 }

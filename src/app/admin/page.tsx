@@ -3,6 +3,7 @@
 import { useSession } from 'next-auth/react';
 import CreateProposalForm from './CreateProposalForm';
 import ManageProposalsList from './ManageProposalsList';
+import CommunityModerationList from './CommunityModerationList';
 
 export default function AdminPage() {
   const { data: session, status } = useSession();
@@ -23,16 +24,21 @@ export default function AdminPage() {
   }
 
   return (
-    <div className="p-8 max-w-4xl mx-auto">
-      <h1 className="text-3xl font-bold mb-8">Admin Panel</h1>
-      
+    <div className="mx-auto max-w-4xl p-8">
+      <h1 className="mb-8 text-3xl font-bold">Panel de administración</h1>
+
       <section className="mb-12">
-        <h2 className="text-2xl font-semibold mb-4">Create New Proposal</h2>
+        <h2 className="mb-4 text-2xl font-semibold">Moderar ideas de la comunidad</h2>
+        <CommunityModerationList />
+      </section>
+
+      <section className="mb-12">
+        <h2 className="mb-4 text-2xl font-semibold">Crear nueva propuesta</h2>
         <CreateProposalForm />
       </section>
 
       <section>
-        <h2 className="text-2xl font-semibold mb-4">Manage Existing Proposals</h2>
+        <h2 className="mb-4 text-2xl font-semibold">Gestionar propuestas existentes</h2>
         <ManageProposalsList />
       </section>
     </div>

@@ -5,8 +5,9 @@ import { useEffect, useState } from 'react';
 type Proposal = {
   id: string;
   title: string;
-  status: 'VOTING' | 'PUBLISHED';
+  status: 'PENDING' | 'VOTING' | 'PUBLISHED';
   publishedUrl: string | null;
+  isCommunity: boolean;
   _count: {
     votes: number;
   };
@@ -24,9 +25,14 @@ const isProposalArray = (data: unknown): data is Proposal[] => {
       return (
         typeof proposal.id === 'string' &&
         typeof proposal.title === 'string' &&
-        (proposal.status === 'VOTING' || proposal.status === 'PUBLISHED') &&
+        (
+          proposal.status === 'PENDING' ||
+          proposal.status === 'VOTING' ||
+          proposal.status === 'PUBLISHED'
+        ) &&
         ('publishedUrl' in proposal ? proposal.publishedUrl === null || typeof proposal.publishedUrl === 'string' : true) &&
-        typeof proposal._count?.votes === 'number'
+        typeof proposal._count?.votes === 'number' &&
+        typeof proposal.isCommunity === 'boolean'
       );
     })
   );
@@ -46,7 +52,9 @@ export default function ManageProposalsList() {
       if (!isProposalArray(data)) {
         throw new Error('Formato de respuesta inesperado.');
       }
-      setProposals(data);
+      setProposals(
+        data.filter((proposal) => !(proposal.isCommunity && proposal.status === 'PENDING'))
+      );
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : 'Ocurrió un error al cargar las propuestas.';
       setError(message);

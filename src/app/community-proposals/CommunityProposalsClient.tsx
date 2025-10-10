@@ -176,7 +176,7 @@ export default function CommunityProposalsClient() {
 
         setTitle("");
         setDescription("");
-        setFormMessage("¡Tu propuesta se ha añadido correctamente!");
+        setFormMessage("¡Tu propuesta quedó pendiente de revisión. Te avisaremos cuando esté publicada!");
         setRefreshToken((token) => token + 1);
         setPage(1);
       } catch (err) {

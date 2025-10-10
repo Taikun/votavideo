@@ -103,6 +103,7 @@ export async function POST(request: Request) {
         description: rawDescription,
         thumbnailUrl: COMMUNITY_PLACEHOLDER,
         isCommunity: true,
+        status: "PENDING",
         createdById: session.user.id,
       },
       include: {
