@@ -13,7 +13,7 @@ export default async function Home() {
     orderBy: {
       createdAt: "desc",
     },
-    take: 10,
+    take: 6,
     select: {
       id: true,
       title: true,
@@ -50,37 +50,39 @@ export default async function Home() {
         <p className="text-muted-foreground mt-2">Vota por el vídeo que quieres ver a continuación.</p>
       </section>
 
-      <section className="w-full max-w-5xl">
-        <div className="flex flex-col gap-8 lg:flex-row lg:items-start">
-          <div className="flex-1">
-            <VideoProposalList />
-          </div>
-          <aside className="w-full rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900 lg:w-80">
-            <div className="flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-                Ideas Comunidad
-              </h3>
-              <Link href="/community-proposals" className="text-xs font-medium text-blue-600 hover:underline">
-                Ver todas
-              </Link>
+      <section className="w-full max-w-5xl space-y-10">
+        <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm dark:border-gray-800 dark:bg-gray-900">
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Ideas Comunidad</h3>
+              <p className="text-sm text-gray-600 dark:text-gray-400">
+                Así va la inspiración de la comunidad. Las más recientes aparecen aquí.
+              </p>
             </div>
-            <ul className="mt-4 space-y-3">
-              {recentCommunityProposals.length === 0 ? (
-                <li className="text-sm text-gray-600 dark:text-gray-300">
-                  Aún no hay propuestas de la comunidad.
+            <Link href="/community-proposals" className="text-xs font-semibold text-blue-600 hover:underline">
+              Ver todas
+            </Link>
+          </div>
+          {recentCommunityProposals.length === 0 ? (
+            <p className="mt-6 text-sm text-gray-600 dark:text-gray-300">
+              Aún no hay propuestas de la comunidad. ¡Publica la primera idea!
+            </p>
+          ) : (
+            <ul className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {recentCommunityProposals.map((proposal) => (
+                <li
+                  key={proposal.id}
+                  className="rounded-lg border border-gray-100 bg-gradient-to-br from-gray-50 to-white p-4 text-sm font-semibold text-gray-800 shadow-sm transition hover:-translate-y-0.5 hover:border-blue-200 hover:shadow-md dark:border-gray-700 dark:from-gray-900 dark:to-gray-800 dark:text-gray-100"
+                >
+                  {proposal.title}
                 </li>
-              ) : (
-                recentCommunityProposals.map((proposal) => (
-                  <li
-                    key={proposal.id}
-                    className="rounded-md border border-transparent bg-gray-50 px-3 py-2 text-sm font-medium text-gray-800 transition hover:border-gray-200 hover:bg-white dark:bg-gray-800 dark:text-gray-200 dark:hover:border-gray-700 dark:hover:bg-gray-800/80"
-                  >
-                    {proposal.title}
-                  </li>
-                ))
-              )}
+              ))}
             </ul>
-          </aside>
+          )}
+        </div>
+
+        <div>
+          <VideoProposalList />
         </div>
       </section>
     </main>
